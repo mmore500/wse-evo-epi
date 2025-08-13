@@ -17,6 +17,8 @@ param memcpy_params: comptime_struct;
 // Colors
 param ctrl_color: color;
 
+param payload_size: u16;
+
 // Queues
 const tx_oq: output_queue = @get_output_queue(2);
 
@@ -25,28 +27,24 @@ const ctrl = @import_module("<control>");
 const layout_module = @import_module("<layout>");
 
 // fabout DSD used to send ctrl wavelet to fabric along ctrl_color
-const tx_ctrl_dsd = @get_dsd(fabout_dsd, .{
-  .extent = 1,
+const out_dsd = @get_dsd(fabout_dsd, .{
+  .extent = payload_size,
   .fabric_color = ctrl_color,
-  .control = true,
   .output_queue = tx_oq
 });
 
-fn main_fn() void {
-  // ID of control task activated on receivers
-  const recv_ctrl_id = @get_control_task_id(40);
+var data = @zeros([payload_size]u32);
+var data_dsd = @get_dsd(
+  mem1d_dsd,
+  .{ .tensor_access = |i|{payload_size} -> data[i] }
+);
 
-  // Now we can reuse a single color to send data to the four neighbors of this PE.
-  // We forward the payload of this control wavelet to the CE, where the ctrl task
-  // bound to recv_ctrl_id will be activated. data argument is 16-bit arg of ctrl task.
+fn main_fn() void {
   const y_coord = layout_module.get_y_coord();
 
-  for (@range(u16, 100)) |i| {
-  @mov32(
-    tx_ctrl_dsd,
-    ctrl.encode_single_payload(ctrl.opcode.NOP, false, recv_ctrl_id, y_coord)
-  );
-  }
+  for (@range(u16, payload_size)) |i| { data[i] = @as(u32, y_coord + i); }
+
+  @mov32(out_dsd, data_dsd);
 
   sys_mod.unblock_cmd_stream();
 }

@@ -6,24 +6,35 @@ param memcpy_params: comptime_struct;
 // Colors
 param ctrl_color: color;
 
-const recv_ctrl_id: control_task_id = @get_control_task_id(40);
+param payload_size: u16;
+
+const rx_iq: input_queue = @get_input_queue(2);
 
 const sys_mod = @import_module("<memcpy/memcpy>", memcpy_params);
 
+var result = @zeros([payload_size]u32);
+const result_ptr: [*]u32 = &result;
+
+const result_dsd = @get_dsd(
+  mem1d_dsd,
+  .{ .tensor_access = |i|{payload_size} -> result[i] }
+);
+
+// main_fn does nothing on recv PEs
 fn main_fn() void {
+
+  const in_dsd = @get_dsd(fabin_dsd, .{
+    .fabric_color = ctrl_color,
+    .extent = payload_size,
+    .input_queue = rx_iq
+  });
+  @mov32(result_dsd, in_dsd);
+
   sys_mod.unblock_cmd_stream();
 }
 
-var result = @zeros([1]u32);
-const result_ptr: [*]u32 = &result;
-
-// Control task receives 16-bit data from ctrl wavelet paylaod
-task recv_ctrl_task(data: u16) void {
-  result[0] = @as(u32, data);
-}
 
 comptime {
-  @bind_control_task(recv_ctrl_task, recv_ctrl_id);
   @unblock(ctrl_color);
 
   @export_symbol(main_fn);

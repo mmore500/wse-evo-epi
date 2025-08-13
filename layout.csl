@@ -35,15 +35,23 @@ layout {
   // all other PEs (i.e. the PEs at the corners of the rectangle) are
   // programmed to contain no instructions or routes.
 
+  const payload_size: u16 = 8;
+
   for (@range(u32, 3)) |y| {
     @set_tile_code(0, y, "send.csl", .{
-      .memcpy_params = memcpy_params_0, .ctrl_color = channel,
+      .memcpy_params = memcpy_params_0,
+      .ctrl_color = channel,
+      .payload_size = payload_size,
     });
     @set_tile_code(1, y, "empty.csl", .{
-      .memcpy_params = memcpy_params_1, .ctrl_color = channel,
+      .memcpy_params = memcpy_params_1,
+      .ctrl_color = channel,
+      .payload_size = payload_size,
     });
     @set_tile_code(2, y, "recv.csl", .{
-      .memcpy_params = memcpy_params_2, .ctrl_color = channel,
+      .memcpy_params = memcpy_params_2,
+      .ctrl_color = channel,
+      .payload_size = payload_size,
     });
   }
 
