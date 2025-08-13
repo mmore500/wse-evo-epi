@@ -12,20 +12,6 @@
 //   7                    16       25                    34
 //   8                    17       26                    35
 
-// WSE-3 task ID map
-// On WSE-3, data tasks are bound to input queues (IDs 0 through 7)
-//
-//  ID var                ID var   ID var                ID var
-//   0 reserved (memcpy)   9       18                    27 reserved (memcpy)
-//   1 reserved (memcpy)  10       19                    28 reserved (memcpy)
-//   2                    11       20                    29 reserved
-//   3                    12       21 reserved (memcpy)  30 reserved (memcpy)
-//   4                    13       22 reserved (memcpy)  31 reserved
-//   5                    14       23 reserved (memcpy)  32
-//   6                    15       24                    33
-//   7                    16       25                    34
-//   8                    17       26                    35
-
 param memcpy_params: comptime_struct;
 
 // Colors
@@ -64,10 +50,5 @@ fn main_fn() void {
 }
 
 comptime {
-  // On WSE-3, we must explicitly initialize input and output queues
-  if (@is_arch("wse3")) {
-    @initialize_queue(tx_oq, .{ .color = tx_color });
-  }
-
   @export_symbol(main_fn);
 }
