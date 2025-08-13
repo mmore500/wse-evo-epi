@@ -9,6 +9,7 @@ param ctrl_color: color;
 param payload_size: u16;
 
 const rx_iq: input_queue = @get_input_queue(2);
+const exit_task_id:   local_task_id = @get_local_task_id(9);
 
 const sys_mod = @import_module("<memcpy/memcpy>", memcpy_params);
 
@@ -28,14 +29,16 @@ fn main_fn() void {
     .extent = payload_size,
     .input_queue = rx_iq
   });
-  @mov32(result_dsd, in_dsd);
+  @mov32(result_dsd, in_dsd, .{ .async = true, .activate = exit_task_id });
 
+}
+
+task exit_task() void {
   sys_mod.unblock_cmd_stream();
 }
 
-
 comptime {
-  @unblock(ctrl_color);
+  @bind_local_task(exit_task, exit_task_id);
 
   @export_symbol(main_fn);
 

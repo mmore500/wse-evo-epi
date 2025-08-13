@@ -23,6 +23,7 @@ param payload_size: u16;
 param ctrl_color: color;
 
 const rx_iq: input_queue = @get_input_queue(2);
+const exit_task_id:   local_task_id = @get_local_task_id(9);
 
 // Task IDs
 var result = @zeros([payload_size]u32);
@@ -43,16 +44,16 @@ fn main_fn() void {
     .extent = payload_size,
     .input_queue = rx_iq
   });
-  @mov32(result_dsd, in_dsd);
+  @mov32(result_dsd, in_dsd, .{ .async = true, .activate = exit_task_id });
 
+}
+
+task exit_task() void {
   sys_mod.unblock_cmd_stream();
 }
 
 comptime {
-  // Since there is no data task receiving wlts along ctrl_color, color/ queue
-  // must be explicitly unblocked for CE to receive and ctrl task to be activated
-  // On WSE-2, we unblock color. On WSE-3, we unblock queue to which color is bound
-  @unblock(ctrl_color);
+  @bind_local_task(exit_task, exit_task_id);
 
   @export_symbol(result_ptr, "result");
   @export_symbol(main_fn);

@@ -21,6 +21,7 @@ param payload_size: u16;
 
 // Queues
 const tx_oq: output_queue = @get_output_queue(2);
+const exit_task_id:   local_task_id = @get_local_task_id(9);
 
 const sys_mod = @import_module("<memcpy/memcpy>", memcpy_params);
 const ctrl = @import_module("<control>");
@@ -44,13 +45,16 @@ fn main_fn() void {
 
   for (@range(u16, payload_size)) |i| { data[i] = @as(u32, y_coord + i); }
 
-  @mov32(out_dsd, data_dsd);
+  @mov32(out_dsd, data_dsd, .{ .async = true, .activate = exit_task_id });
+}
 
+task exit_task() void {
   sys_mod.unblock_cmd_stream();
 }
 
 comptime {
   @export_symbol(main_fn);
+  @bind_local_task(exit_task, exit_task_id);
 
   const main_route = .{ .rx = .{ RAMP }, .tx = .{ EAST } };
   @set_local_color_config(ctrl_color, .{ .routes = main_route });
