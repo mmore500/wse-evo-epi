@@ -3,6 +3,10 @@
 
 param memcpy_params: comptime_struct;
 
+// Colors
+param ctrl_color: color;
+
+
 const sys_mod = @import_module("<memcpy/memcpy>", memcpy_params);
 
 fn main_fn() void {
@@ -11,4 +15,9 @@ fn main_fn() void {
 
 comptime {
   @export_symbol(main_fn);
+
+  const main_route = .{ .rx = .{ WEST }, .tx = .{ EAST } };
+  @set_local_color_config(ctrl_color, .{ .routes = main_route });
+
+
 }

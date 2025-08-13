@@ -18,10 +18,7 @@
 param memcpy_params: comptime_struct;
 
 // Colors
-param rx_color: color;
-
-// Queues
-const rx_iq: input_queue = @get_input_queue(2);
+param ctrl_color: color;
 
 // Task IDs
 const recv_ctrl_id: control_task_id = @get_control_task_id(40);
@@ -44,12 +41,15 @@ task recv_ctrl_task(data: u16) void {
 comptime {
   @bind_control_task(recv_ctrl_task, recv_ctrl_id);
 
-  // Since there is no data task receiving wlts along rx_color, color/ queue
+  // Since there is no data task receiving wlts along ctrl_color, color/ queue
   // must be explicitly unblocked for CE to receive and ctrl task to be activated
   // On WSE-2, we unblock color. On WSE-3, we unblock queue to which color is bound
-  @unblock(rx_color);
+  @unblock(ctrl_color);
 
   @export_symbol(result_ptr, "result");
   @export_symbol(main_fn);
+
+  const main_route = .{ .rx = .{ WEST }, .tx = .{ RAMP } };
+  @set_local_color_config(ctrl_color, .{ .routes = main_route });
 
 }

@@ -15,18 +15,19 @@
 param memcpy_params: comptime_struct;
 
 // Colors
-param tx_color: color;
+param ctrl_color: color;
 
 // Queues
 const tx_oq: output_queue = @get_output_queue(2);
 
 const sys_mod = @import_module("<memcpy/memcpy>", memcpy_params);
 const ctrl = @import_module("<control>");
+const layout_module = @import_module("<layout>");
 
-// fabout DSD used to send ctrl wavelet to fabric along tx_color
+// fabout DSD used to send ctrl wavelet to fabric along ctrl_color
 const tx_ctrl_dsd = @get_dsd(fabout_dsd, .{
   .extent = 1,
-  .fabric_color = tx_color,
+  .fabric_color = ctrl_color,
   .control = true,
   .output_queue = tx_oq
 });
@@ -38,12 +39,13 @@ fn main_fn() void {
   // Now we can reuse a single color to send data to the four neighbors of this PE.
   // We forward the payload of this control wavelet to the CE, where the ctrl task
   // bound to recv_ctrl_id will be activated. data argument is 16-bit arg of ctrl task.
+  const y_coord = layout_module.get_y_coord();
 
   for (@range(u16, 100)) |i| {
-  @mov32(tx_ctrl_dsd, ctrl.encode_single_payload(ctrl.opcode.SWITCH_ADV, false, recv_ctrl_id, 0));
-  @mov32(tx_ctrl_dsd, ctrl.encode_single_payload(ctrl.opcode.SWITCH_ADV, false, recv_ctrl_id, 2));
-  @mov32(tx_ctrl_dsd, ctrl.encode_single_payload(ctrl.opcode.SWITCH_ADV, false, recv_ctrl_id, 4));
-  @mov32(tx_ctrl_dsd, ctrl.encode_single_payload(ctrl.opcode.SWITCH_ADV, false, recv_ctrl_id, 6));
+  @mov32(
+    tx_ctrl_dsd,
+    ctrl.encode_single_payload(ctrl.opcode.NOP, false, recv_ctrl_id, y_coord)
+  );
   }
 
   sys_mod.unblock_cmd_stream();
@@ -51,4 +53,8 @@ fn main_fn() void {
 
 comptime {
   @export_symbol(main_fn);
+
+  const main_route = .{ .rx = .{ RAMP }, .tx = .{ EAST } };
+  @set_local_color_config(ctrl_color, .{ .routes = main_route });
+
 }

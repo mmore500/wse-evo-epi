@@ -35,60 +35,17 @@ layout {
   // all other PEs (i.e. the PEs at the corners of the rectangle) are
   // programmed to contain no instructions or routes.
 
-  // Sender
-  @set_tile_code(1, 1, "send.csl", .{
-    .memcpy_params = memcpy_params_1, .tx_color = channel,
-  });
-
-  const sender_routes = .{
-    // The default route, which is to receive from ramp and send to north
-    .rx = .{ RAMP },
-    .tx = .{ NORTH }
-  };
-
-  const sender_switches = .{
-    // Upon a control wavelet, change the transmit direction to west
-    .pos1 = .{ .tx = WEST },
-    // Upon another control wavelet, change the transmit direction to east
-    .pos2 = .{ .tx = EAST },
-    // Upon yet another control wavelet, change the transmit direction to south
-    .pos3 = .{ .tx = SOUTH },
-    // Send to west PE first, then east PE, then south PE, and then north PE
-    .current_switch_pos = 1,
-    // Wrap around from position 3 to position 0 after receiving control wavelet
-    .ring_mode = true,
-  };
-
-  @set_color_config(1, 1, channel, .{ .routes = sender_routes,
-                                      .switches = sender_switches });
-
-
-  // Receivers
-  @set_tile_code(1, 0, "recv.csl", .{
-    .memcpy_params = memcpy_params_1, .rx_color = channel,
-  });
-  @set_color_config(1, 0, channel, .{ .routes = .{ .rx = .{ SOUTH }, .tx = .{ RAMP }}});
-
-  @set_tile_code(0, 1, "recv.csl", .{
-    .memcpy_params = memcpy_params_0, .rx_color = channel,
-  });
-  @set_color_config(0, 1, channel, .{ .routes = .{ .rx = .{ EAST }, .tx = .{ RAMP }}});
-
-  @set_tile_code(2, 1, "recv.csl", .{
-    .memcpy_params = memcpy_params_2, .rx_color = channel,
-  });
-  @set_color_config(2, 1, channel, .{ .routes = .{ .rx = .{ WEST }, .tx = .{ RAMP }}});
-
-  @set_tile_code(1, 2, "recv.csl", .{
-    .memcpy_params = memcpy_params_1, .rx_color = channel,
-  });
-  @set_color_config(1, 2, channel, .{ .routes = .{ .rx = .{ NORTH }, .tx = .{ RAMP }}});
-
-  // Empty PEs
-  @set_tile_code(0, 0, "empty.csl", .{ .memcpy_params = memcpy_params_0 });
-  @set_tile_code(2, 0, "empty.csl", .{ .memcpy_params = memcpy_params_2 });
-  @set_tile_code(0, 2, "empty.csl", .{ .memcpy_params = memcpy_params_0 });
-  @set_tile_code(2, 2, "empty.csl", .{ .memcpy_params = memcpy_params_2 });
+  for (@range(u32, 3)) |y| {
+    @set_tile_code(0, y, "send.csl", .{
+      .memcpy_params = memcpy_params_0, .ctrl_color = channel,
+    });
+    @set_tile_code(1, y, "empty.csl", .{
+      .memcpy_params = memcpy_params_1, .ctrl_color = channel,
+    });
+    @set_tile_code(2, y, "recv.csl", .{
+      .memcpy_params = memcpy_params_2, .ctrl_color = channel,
+    });
+  }
 
   // export symbol names
   @export_name("result", [*]u32, false);
