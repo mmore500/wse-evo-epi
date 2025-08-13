@@ -23,26 +23,30 @@ runner.run()
 runner.launch('main_fn', nonblock=False)
 
 # Copy arr back from PEs that received wlts
-result0 = np.zeros([1], dtype=np.uint32)
-runner.memcpy_d2h(result0, result_symbol, 2, 0, 1, 1, 1, streaming=False,
-  order=MemcpyOrder.ROW_MAJOR, data_type=MemcpyDataType.MEMCPY_32BIT, nonblock=False)
+for y in range(3):
 
-result1 = np.zeros([1], dtype=np.uint32)
-runner.memcpy_d2h(result1, result_symbol, 2, 1, 1, 1, 1, streaming=False,
-  order=MemcpyOrder.ROW_MAJOR, data_type=MemcpyDataType.MEMCPY_32BIT, nonblock=False)
+    result_recv = np.zeros([1], dtype=np.uint32)
+    runner.memcpy_d2h(
+        result_recv, result_symbol, 2, y, 1, 1, 1,
+        streaming=False,
+        order=MemcpyOrder.ROW_MAJOR,
+        data_type=MemcpyDataType.MEMCPY_32BIT,
+        nonblock=False,
+    )
+    print(f"result{y} recv: {result_recv}")
+    np.testing.assert_equal(result_recv, np.array([y], dtype=np.uint32))
 
-result2 = np.zeros([1], dtype=np.uint32)
-runner.memcpy_d2h(result2, result_symbol, 2, 2, 1, 1, 1, streaming=False,
-  order=MemcpyOrder.ROW_MAJOR, data_type=MemcpyDataType.MEMCPY_32BIT, nonblock=False)
+    result_empty = np.zeros([1], dtype=np.uint32)
+    runner.memcpy_d2h(
+        result_empty, result_symbol, 1, y, 1, 1, 1,
+        streaming=False,
+        order=MemcpyOrder.ROW_MAJOR,
+        data_type=MemcpyDataType.MEMCPY_32BIT,
+        nonblock=False,
+    )
+    print(f"result{y} empty: {result_empty}")
+    np.testing.assert_equal(result_empty, np.array([y], dtype=np.uint32))
 
 runner.stop()
-
-print("result0: ", result0)
-print("result1: ", result1)
-print("result2: ", result2)
-
-np.testing.assert_equal(result0, np.array([0], dtype=np.uint32))
-np.testing.assert_equal(result1, np.array([1], dtype=np.uint32))
-np.testing.assert_equal(result2, np.array([2], dtype=np.uint32))
 
 print("SUCCESS!")

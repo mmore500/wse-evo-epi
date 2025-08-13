@@ -6,6 +6,7 @@ param memcpy_params: comptime_struct;
 // Colors
 param ctrl_color: color;
 
+const recv_ctrl_id: control_task_id = @get_control_task_id(40);
 
 const sys_mod = @import_module("<memcpy/memcpy>", memcpy_params);
 
@@ -13,11 +14,23 @@ fn main_fn() void {
   sys_mod.unblock_cmd_stream();
 }
 
+var result = @zeros([1]u32);
+const result_ptr: [*]u32 = &result;
+
+// Control task receives 16-bit data from ctrl wavelet paylaod
+task recv_ctrl_task(data: u16) void {
+  result[0] = @as(u32, data);
+}
+
 comptime {
+  @bind_control_task(recv_ctrl_task, recv_ctrl_id);
+  @unblock(ctrl_color);
+
   @export_symbol(main_fn);
 
-  const main_route = .{ .rx = .{ WEST }, .tx = .{ EAST } };
+  const main_route = .{ .rx = .{ WEST }, .tx = .{ EAST, RAMP } };
   @set_local_color_config(ctrl_color, .{ .routes = main_route });
 
+  @export_symbol(result_ptr, "result");
 
 }
