@@ -71,24 +71,32 @@ fn main_fn() void {
 
   for (@range(u16, payload_size)) |i| { bcst[i] = @as(u32, y_coord + i); }
 
-  @mov32(out_dsd, bcst_dsd, .{ .async = true, .activate = collect_task_id });
+  @mov32(
+    out_dsd,
+    bcst_dsd,
+    // .{ .async = true, .activate = collect_task_id }
+  );
+  // @assert(false); // TODO: remove this assert when the task is implemented
+  sys_mod.unblock_cmd_stream();
 
 }
 
 task collect_task() void {
+  // @assert(false);
+  sys_mod.unblock_cmd_stream();
   // switch all routers to collect mode
-  @mov32(
-    tx_ctrl_dsd,
-    ctrl.encode_single_payload(ctrl.opcode.SWITCH_ADV, false, {}, 0)
-  );
-  @mov32(
-    coll_dsd,
-    in_dsd,
-    .{
-      .async = true,
-      .activate = exit_task_id,
-    },
-  );
+  // @mov32(
+  //   tx_ctrl_dsd,
+  //   ctrl.encode_single_payload(ctrl.opcode.SWITCH_ADV, false, {}, 0)
+  // );
+  // @mov32(
+  //   coll_dsd,
+  //   in_dsd,
+  //   .{
+  //     .async = true,
+  //     .activate = exit_task_id,
+  //   },
+  // );
 }
 
 task exit_task() void {

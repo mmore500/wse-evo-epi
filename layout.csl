@@ -17,16 +17,17 @@
 const channel: color = @get_color(0);
 
 const memcpy = @import_module("<memcpy/get_params>", .{
-  .width = 3,
+  .width = 4,
   .height = 3,
   });
 
 layout {
-  @set_rectangle(3, 3);
+  @set_rectangle(4, 3);
 
   const memcpy_params_0 = memcpy.get_params(0);
   const memcpy_params_1 = memcpy.get_params(1);
   const memcpy_params_2 = memcpy.get_params(2);
+  const memcpy_params_3 = memcpy.get_params(3);
 
   // The core has 3-by-3 rectangle of PEs.
   // Out of the nine PEs, the PE in the center (PE #1,1) will send four
@@ -42,15 +43,20 @@ layout {
       .memcpy_params = memcpy_params_0,
       .ctrl_color = channel,
       .payload_size = payload_size,
-      .collect_count = 2,
+      .collect_count = 3,
     });
     @set_tile_code(1, y, "empty.csl", .{
       .memcpy_params = memcpy_params_1,
       .ctrl_color = channel,
       .payload_size = payload_size,
     });
-    @set_tile_code(2, y, "recv.csl", .{
+    @set_tile_code(2, y, "empty.csl", .{
       .memcpy_params = memcpy_params_2,
+      .ctrl_color = channel,
+      .payload_size = payload_size,
+    });
+    @set_tile_code(3, y, "recv.csl", .{
+      .memcpy_params = memcpy_params_3,
       .ctrl_color = channel,
       .payload_size = payload_size,
     });

@@ -24,28 +24,18 @@ runner.launch('main_fn', nonblock=False)
 
 # Copy arr back from PEs that received wlts
 for y in range(3):
+    for x in range(1, 4):
+        result_recv = np.zeros([1], dtype=np.uint32)
+        runner.memcpy_d2h(
+            result_recv, result_symbol, x, y, 1, 1, 1,
+            streaming=False,
+            order=MemcpyOrder.ROW_MAJOR,
+            data_type=MemcpyDataType.MEMCPY_32BIT,
+            nonblock=False,
+        )
+        print(f"result{x},{y} recv: {result_recv}")
+        np.testing.assert_equal(result_recv, np.array([y], dtype=np.uint32))
 
-    result_recv = np.zeros([1], dtype=np.uint32)
-    runner.memcpy_d2h(
-        result_recv, result_symbol, 2, y, 1, 1, 1,
-        streaming=False,
-        order=MemcpyOrder.ROW_MAJOR,
-        data_type=MemcpyDataType.MEMCPY_32BIT,
-        nonblock=False,
-    )
-    print(f"result{y} recv: {result_recv}")
-    np.testing.assert_equal(result_recv, np.array([y], dtype=np.uint32))
-
-    result_empty = np.zeros([1], dtype=np.uint32)
-    runner.memcpy_d2h(
-        result_empty, result_symbol, 1, y, 1, 1, 1,
-        streaming=False,
-        order=MemcpyOrder.ROW_MAJOR,
-        data_type=MemcpyDataType.MEMCPY_32BIT,
-        nonblock=False,
-    )
-    print(f"result{y} empty: {result_empty}")
-    np.testing.assert_equal(result_empty, np.array([y], dtype=np.uint32))
 
 runner.stop()
 

@@ -39,14 +39,16 @@ fn main_fn() void {
 
   const in_dsd = @get_dsd(fabin_dsd, .{
     .fabric_color = ctrl_color,
-    .extent = payload_size + 1,
+    .extent = payload_size,
     .input_queue = rx_iq
   });
   @mov32(result_dsd, in_dsd, .{
-    .async = true,
+    // .async = true,
     // .activate = exit_task_id,
-    .on_control = .{ .activate = collect_task_id },
+    // .on_control = .{ .activate = collect_task_id },
   });
+  sys_mod.unblock_cmd_stream();
+  // @assert(false); // TODO: remove this assert when the task is implemented
 
 }
 
@@ -59,30 +61,33 @@ const dummy_dsd = @get_dsd(
 
 task collect_task() void {
 
-  const wait_dsd = @get_dsd(fabin_dsd, .{
-    .fabric_color = ctrl_color,
-    .extent = 2,
-    .input_queue = rx_iq
-  });
+  @assert(false);
+  sys_mod.unblock_cmd_stream();
 
-  @mov32(dummy_dsd, wait_dsd);
-  @assert(dummy[0] > 1000007); // TODO why is there an extra wavelet?
-  @assert(dummy[1] == 0);
+  // const wait_dsd = @get_dsd(fabin_dsd, .{
+  //   .fabric_color = ctrl_color,
+  //   .extent = 2,
+  //   .input_queue = rx_iq
+  // });
 
-  @mov32( // advance own switch
-    tx_ctrl_dsd,
-    ctrl.encode_single_payload(ctrl.opcode.SWITCH_ADV, true, {}, 0)
-  );
+  // @mov32(dummy_dsd, wait_dsd);
+  // @assert(dummy[0] > 1000007); // TODO why is there an extra wavelet?
+  // @assert(dummy[1] == 0);
 
-  const out_dsd = @get_dsd(fabout_dsd, .{
-    .fabric_color = ctrl_color,
-    .extent = payload_size,
-    .output_queue = tx_oq,
-  });
-  @mov32(out_dsd, result_dsd, .{
-    .async = true,
-    .activate = exit_task_id,
-  });
+  // @mov32( // advance own switch
+  //   tx_ctrl_dsd,
+  //   ctrl.encode_single_payload(ctrl.opcode.SWITCH_ADV, true, {}, 0)
+  // );
+
+  // const out_dsd = @get_dsd(fabout_dsd, .{
+  //   .fabric_color = ctrl_color,
+  //   .extent = payload_size,
+  //   .output_queue = tx_oq,
+  // });
+  // @mov32(out_dsd, result_dsd, .{
+  //   .async = true,
+  //   .activate = exit_task_id,
+  // });
 }
 
 task exit_task() void {
