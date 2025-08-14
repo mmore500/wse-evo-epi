@@ -23,6 +23,17 @@ const result_dsd = @get_dsd(
   .{ .tensor_access = |i|{payload_size} -> result[i] }
 );
 
+const ctrl = @import_module("<control>");
+
+// fabout DSD used to send ctrl wavelet to fabric along tx_color
+const tx_ctrl_dsd = @get_dsd(fabout_dsd, .{
+  .extent = 1,
+  .fabric_color = ctrl_color,
+  .control = true,
+  .output_queue = tx_oq
+});
+
+
 // main_fn does nothing on recv PEs
 fn main_fn() void {
 
@@ -39,10 +50,29 @@ fn main_fn() void {
 
 }
 
+var dummy = @zeros([2]u32);
+const dummy_dsd = @get_dsd(
+  mem1d_dsd,
+  .{ .tensor_access = |i|{2} -> dummy[i] }
+);
+
+
 task collect_task() void {
-  for (@range(u16, 10000)) |i| {
-    @random16(); // hacky wait before send TODO
-  }
+
+  const wait_dsd = @get_dsd(fabin_dsd, .{
+    .fabric_color = ctrl_color,
+    .extent = 2,
+    .input_queue = rx_iq
+  });
+
+  @mov32(dummy_dsd, wait_dsd);
+  @assert(dummy[0] > 1000007); // TODO why is there an extra wavelet?
+  @assert(dummy[1] == 0);
+
+  @mov32( // advance own switch
+    tx_ctrl_dsd,
+    ctrl.encode_single_payload(ctrl.opcode.SWITCH_ADV, true, {}, 0)
+  );
 
   const out_dsd = @get_dsd(fabout_dsd, .{
     .fabric_color = ctrl_color,
@@ -70,19 +100,30 @@ comptime {
     .tx = .{ EAST, RAMP }
   };
   const collect_route = .{ .tx = .{ WEST } };
+  const activate_route = .{ .tx = .{ RAMP } };
   @set_local_color_config(
     ctrl_color,
     .{
       .routes = broadcast_route,
       .switches = .{
         .pos1 = collect_route,
+        .pos2 = activate_route,
+        .pos3 = collect_route,
         .current_switch_pos = 0,
         .pop_mode = .{ .no_pop = true },
-        .ring_mode = true,
+        .ring_mode = false,
       },
+      // .filter = .{
+      //   .kind = .{ .counter = true },
+      //   .count_data = false,
+      //   .count_control = true,
+      //   .init_counter = 0,
+      //   .max_counter = 1,
+      //   .limit1 = 1,
+      //   .filter_control = true,
+      // },
     }
   );
 
   @export_symbol(result_ptr, "result");
-
 }

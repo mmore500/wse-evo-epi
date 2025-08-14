@@ -113,9 +113,18 @@ comptime {
         .pos1 = collect_route,
         .current_switch_pos = 0,
         .pop_mode = .{ .no_pop = true },
-        .ring_mode = true,
+        .ring_mode = false,
       },
-    }
+      // .filter = .{
+      //   .kind = .{ .counter = true },
+      //   .count_data = false,
+      //   .count_control = true,
+      //   .init_counter = 0,
+      //   .max_counter = 0,
+      //   .limit1 = 1,
+      //   .filter_control = true,
+      // },
+    },
   );
 
 }

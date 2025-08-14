@@ -37,6 +37,15 @@ const result_dsd = @get_dsd(
 );
 
 const sys_mod = @import_module("<memcpy/memcpy>", memcpy_params);
+const ctrl = @import_module("<control>");
+
+// fabout DSD used to send ctrl wavelet to fabric along tx_color
+const tx_ctrl_dsd = @get_dsd(fabout_dsd, .{
+  .extent = 1,
+  .fabric_color = ctrl_color,
+  .control = true,
+  .output_queue = tx_oq
+});
 
 // main_fn does nothing on recv PEs
 fn main_fn() void {
@@ -67,6 +76,16 @@ task collect_task() void {
 }
 
 task exit_task() void {
+  @mov32(
+    tx_ctrl_dsd,
+    ctrl.encode_single_payload(ctrl.opcode.SWITCH_ADV, true, {}, 0)
+  );
+  const out_dsd = @get_dsd(fabout_dsd, .{
+    .fabric_color = ctrl_color,
+    .extent = 1,
+    .output_queue = tx_oq,
+  });
+  @mov32(out_dsd, 0);
   sys_mod.unblock_cmd_stream();
 }
 
@@ -90,7 +109,7 @@ comptime {
         .pos1 = collect_route,
         .current_switch_pos = 0,
         .pop_mode = .{ .no_pop = true },
-        .ring_mode = true,
+        .ring_mode = false,
       },
     }
   );
