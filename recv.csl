@@ -78,7 +78,6 @@ task collect_task() void {
 }
 
 task exit_task() void {
-  sys_mod.unblock_cmd_stream();
 
   // @mov32(
   //   tx_ctrl_dsd,
