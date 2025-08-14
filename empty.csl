@@ -122,6 +122,11 @@ task exit_task() void {
       ctrl.encode_single_payload(ctrl.opcode.SWITCH_ADV, false, {}, 0)
     );
   }
+  switch_config.set_pop_mode(
+    ctrl_color,
+    switch_config.pop_mode.NO_POP,
+  );
+  switch_config.clear_current_position(ctrl_color);
   sys_mod.unblock_cmd_stream();
 }
 

@@ -77,6 +77,9 @@ task collect_task() void {
   });
 }
 
+const tile_config = @import_module("<tile_config>");
+const switch_config = tile_config.switch_config;
+
 task exit_task() void {
 
     const opcodes = [1]ctrl.opcode{
@@ -99,6 +102,7 @@ task exit_task() void {
     tx_ctrl_dsd,
     ctrl.encode_single_payload(ctrl.opcode.SWITCH_ADV, false, {}, 0)
   );
+  switch_config.clear_current_position(ctrl_color);
   sys_mod.unblock_cmd_stream();
 }
 

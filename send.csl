@@ -96,7 +96,11 @@ task collect_task() void {
   );
 }
 
+const tile_config = @import_module("<tile_config>");
+const switch_config = tile_config.switch_config;
+
 task exit_task() void {
+  switch_config.clear_current_position(ctrl_color);
   sys_mod.unblock_cmd_stream();
 }
 
