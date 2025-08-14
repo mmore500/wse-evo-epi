@@ -74,10 +74,10 @@ fn main_fn() void {
   @mov32(
     out_dsd,
     bcst_dsd,
-    // .{ .async = true, .activate = collect_task_id }
+    .{ .async = true, .activate = collect_task_id }
   );
   // @assert(false); // TODO: remove this assert when the task is implemented
-  sys_mod.unblock_cmd_stream();
+  // sys_mod.unblock_cmd_stream();
 
 }
 

@@ -56,12 +56,12 @@ fn main_fn() void {
     .input_queue = rx_iq
   });
   @mov32(result_dsd, in_dsd, .{
-    // .async = true,
-    // .activate = collect_task_id,
-    // .on_control = .{ .activate = collect_task_id },
+    .async = true,
+    .activate = collect_task_id,
+    .on_control = .{ .activate = collect_task_id },
   });
   // @assert(false);
-  sys_mod.unblock_cmd_stream();
+  // sys_mod.unblock_cmd_stream();
 
 }
 
