@@ -50,7 +50,8 @@ const out_dsd = @get_dsd(fabout_dsd, .{
 // fabin DSD
 const in_dsd = @get_dsd(fabin_dsd, .{
   .fabric_color = ctrl_color,
-  .extent = payload_size * collect_count,
+  // .extent = payload_size * collect_count,
+  .extent = payload_size * 1,
   .input_queue = rx_iq
 });
 
@@ -76,27 +77,22 @@ fn main_fn() void {
     bcst_dsd,
     .{ .async = true, .activate = collect_task_id }
   );
-  // @assert(false); // TODO: remove this assert when the task is implemented
-  // sys_mod.unblock_cmd_stream();
-
 }
 
 task collect_task() void {
-  // @assert(false);
   // switch all routers to collect mode
   @mov32(
     tx_ctrl_dsd,
     ctrl.encode_single_payload(ctrl.opcode.SWITCH_ADV, false, {}, 0)
   );
-  // @mov32(
-  //   coll_dsd,
-  //   in_dsd,
-  //   .{
-  //     .async = true,
-  //     .activate = exit_task_id,
-  //   },
-  // );
-  sys_mod.unblock_cmd_stream();
+  @mov32(
+    coll_dsd,
+    in_dsd,
+    .{
+      .async = true,
+      .activate = exit_task_id,
+    },
+  );
 }
 
 task exit_task() void {

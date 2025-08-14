@@ -66,17 +66,15 @@ fn main_fn() void {
 }
 
 task collect_task() void {
-  // @assert(false);
-  sys_mod.unblock_cmd_stream();
-  // const out_dsd = @get_dsd(fabout_dsd, .{
-  //   .fabric_color = ctrl_color,
-  //   .extent = payload_size,
-  //   .output_queue = tx_oq,
-  // });
-  // @mov32(out_dsd, result_dsd, .{
-  //   .async = true,
-  //   .activate = exit_task_id,
-  // });
+  const out_dsd = @get_dsd(fabout_dsd, .{
+    .fabric_color = ctrl_color,
+    .extent = payload_size,
+    .output_queue = tx_oq,
+  });
+  @mov32(out_dsd, result_dsd, .{
+    .async = true,
+    .activate = exit_task_id,
+  });
 }
 
 task exit_task() void {
