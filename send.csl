@@ -83,12 +83,11 @@ fn main_fn() void {
 
 task collect_task() void {
   // @assert(false);
-  sys_mod.unblock_cmd_stream();
   // switch all routers to collect mode
-  // @mov32(
-  //   tx_ctrl_dsd,
-  //   ctrl.encode_single_payload(ctrl.opcode.SWITCH_ADV, false, {}, 0)
-  // );
+  @mov32(
+    tx_ctrl_dsd,
+    ctrl.encode_single_payload(ctrl.opcode.SWITCH_ADV, false, {}, 0)
+  );
   // @mov32(
   //   coll_dsd,
   //   in_dsd,
@@ -97,6 +96,7 @@ task collect_task() void {
   //     .activate = exit_task_id,
   //   },
   // );
+  sys_mod.unblock_cmd_stream();
 }
 
 task exit_task() void {
