@@ -42,6 +42,7 @@ layout {
       .memcpy_params = memcpy_params_0,
       .ctrl_color = channel,
       .payload_size = payload_size,
+      .collect_count = 2,
     });
     @set_tile_code(1, y, "empty.csl", .{
       .memcpy_params = memcpy_params_1,
