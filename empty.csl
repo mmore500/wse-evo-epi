@@ -88,26 +88,44 @@ task collect_task() void {
   //   ctrl.encode_single_payload(ctrl.opcode.SWITCH_ADV, true, {}, 0)
   // );
 
-  // const out_dsd = @get_dsd(fabout_dsd, .{
-  //   .fabric_color = ctrl_color,
-  //   .extent = payload_size,
-  //   .output_queue = tx_oq,
-  // });
-  // @mov32(out_dsd, result_dsd, .{
-  //   .async = true,
-  //   .activate = exit_task_id,
-  // });
 }
 
+const layout_module = @import_module("<layout>");
+
 task exit_task() void {
-  @mov32(
-    tx_ctrl_dsd,
-    ctrl.encode_single_payload(ctrl.opcode.SWITCH_ADV, true, {}, 0)
-  );
-  @mov32(
-    tx_ctrl_dsd,
-    ctrl.encode_single_payload(ctrl.opcode.SWITCH_ADV, false, {}, 0)
-  );
+
+  const out_dsd = @get_dsd(fabout_dsd, .{
+    .fabric_color = ctrl_color,
+    .extent = payload_size,
+    .output_queue = tx_oq,
+  });
+  const x_coord = layout_module.get_x_coord();
+  @mov32(out_dsd, result_dsd, .{
+    // .async = true,
+    // .activate = exit_task_id,
+  });
+  if (x_coord != 1) {
+    const opcodes = [1]ctrl.opcode{
+      ctrl.opcode.SWITCH_ADV,
+    };
+    const ce_ignore = [1]bool{
+      true,
+    };
+    @mov32(
+      tx_ctrl_dsd,
+      ctrl.encode_payload(
+        1, // comptime N: u16,
+        opcodes, // comptime cmds: [N]opcode,
+        ce_ignore, // comptime ce_ignore: [N]bool,
+        true, // ce_ignore_remaining: bool,
+        {}, // comptime entrypoint: anytype
+      ),
+    );
+    @mov32(
+      tx_ctrl_dsd,
+      ctrl.encode_single_payload(ctrl.opcode.SWITCH_ADV, false, {}, 0)
+    );
+  }
   sys_mod.unblock_cmd_stream();
 }
 

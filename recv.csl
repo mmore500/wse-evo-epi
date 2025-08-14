@@ -79,10 +79,22 @@ task collect_task() void {
 
 task exit_task() void {
 
-  @mov32(
-    tx_ctrl_dsd,
-    ctrl.encode_single_payload(ctrl.opcode.SWITCH_ADV, true, {}, 0)
-  );
+    const opcodes = [1]ctrl.opcode{
+      ctrl.opcode.SWITCH_ADV,
+    };
+    const ce_ignore = [1]bool{
+      true,
+    };
+    @mov32(
+      tx_ctrl_dsd,
+      ctrl.encode_payload(
+        1, // comptime N: u16,
+        opcodes, // comptime cmds: [N]opcode,
+        ce_ignore, // comptime ce_ignore: [N]bool,
+        true, // ce_ignore_remaining: bool,
+        {}, // comptime entrypoint: anytype
+      ),
+    );
   @mov32(
     tx_ctrl_dsd,
     ctrl.encode_single_payload(ctrl.opcode.SWITCH_ADV, false, {}, 0)

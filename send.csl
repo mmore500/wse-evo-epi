@@ -26,6 +26,7 @@ const tx_oq: output_queue = @get_output_queue(2);
 const rx_iq: input_queue = @get_input_queue(2);
 const exit_task_id:   local_task_id = @get_local_task_id(9);
 const collect_task_id: local_task_id = @get_local_task_id(10);
+const sentinel_task_id: local_task_id = @get_local_task_id(11);
 
 const sys_mod = @import_module("<memcpy/memcpy>", memcpy_params);
 const ctrl = @import_module("<control>");
@@ -50,8 +51,7 @@ const out_dsd = @get_dsd(fabout_dsd, .{
 // fabin DSD
 const in_dsd = @get_dsd(fabin_dsd, .{
   .fabric_color = ctrl_color,
-  // .extent = payload_size * collect_count,
-  .extent = payload_size * 1,
+  .extent = payload_size * collect_count,
   .input_queue = rx_iq
 });
 
@@ -91,6 +91,7 @@ task collect_task() void {
     .{
       .async = true,
       .activate = exit_task_id,
+      .on_control = .{ .activate = sentinel_task_id },
     },
   );
 }
@@ -99,10 +100,15 @@ task exit_task() void {
   sys_mod.unblock_cmd_stream();
 }
 
+task sentinel_task() void {
+  @assert(false); // should never reach here
+}
+
 comptime {
   @export_symbol(main_fn);
   @bind_local_task(collect_task, collect_task_id);
   @bind_local_task(exit_task, exit_task_id);
+  @bind_local_task(sentinel_task, sentinel_task_id);
 
    const broadcast_route = .{
     .rx = .{ EAST, RAMP },
