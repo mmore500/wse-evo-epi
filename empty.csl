@@ -81,14 +81,6 @@ task collect_task() void {
     .on_control = .{ .activate = do_collect_task_id },
     // .activate = exit_task_id,
   });
-  // @assert(dummy[0] > 1000007); // TODO why is there an extra wavelet?
-  // @assert(dummy[1] == 0);
-
-  // @mov32( // advance own switch
-  //   tx_ctrl_dsd,
-  //   ctrl.encode_single_payload(ctrl.opcode.SWITCH_ADV, true, {}, 0)
-  // );
-
 }
 
 const layout_module = @import_module("<layout>");
