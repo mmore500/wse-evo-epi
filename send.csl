@@ -71,7 +71,22 @@ comptime {
   @export_symbol(main_fn);
   @bind_local_task(exit_task, exit_task_id);
 
-  const main_route = .{ .rx = .{ RAMP }, .tx = .{ EAST } };
-  @set_local_color_config(ctrl_color, .{ .routes = main_route });
+   const broadcast_route = .{
+    .rx = .{ EAST, RAMP },
+    .tx = .{ EAST }
+  };
+  const collect_route = .{ .tx = .{ RAMP } };
+  @set_local_color_config(
+    ctrl_color,
+    .{
+      .routes = broadcast_route,
+      .switches = .{
+        .pos1 = collect_route,
+        .current_switch_pos = 0,
+        .pop_mode = .{ .no_pop = true },
+        .ring_mode = true,
+      },
+    }
+  );
 
 }

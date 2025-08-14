@@ -46,8 +46,23 @@ comptime {
 
   @export_symbol(main_fn);
 
-  const main_route = .{ .rx = .{ WEST }, .tx = .{ EAST, RAMP } };
-  @set_local_color_config(ctrl_color, .{ .routes = main_route });
+  const broadcast_route = .{
+    .rx = .{ EAST, WEST, RAMP },
+    .tx = .{ EAST, RAMP }
+  };
+  const collect_route = .{ .tx = .{ WEST } };
+  @set_local_color_config(
+    ctrl_color,
+    .{
+      .routes = broadcast_route,
+      .switches = .{
+        .pos1 = collect_route,
+        .current_switch_pos = 0,
+        .pop_mode = .{ .no_pop = true },
+        .ring_mode = true,
+      },
+    }
+  );
 
   @export_symbol(result_ptr, "result");
 
