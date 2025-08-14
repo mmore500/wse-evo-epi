@@ -21,11 +21,21 @@ param payload_size: u16;
 
 // Queues
 const tx_oq: output_queue = @get_output_queue(2);
+const rx_iq: input_queue = @get_input_queue(2);
 const exit_task_id:   local_task_id = @get_local_task_id(9);
 
 const sys_mod = @import_module("<memcpy/memcpy>", memcpy_params);
 const ctrl = @import_module("<control>");
 const layout_module = @import_module("<layout>");
+
+
+// fabout DSD used to send ctrl wavelet to fabric along tx_color
+const tx_ctrl_dsd = @get_dsd(fabout_dsd, .{
+  .extent = 1,
+  .fabric_color = ctrl_color,
+  .control = true,
+  .output_queue = tx_oq
+});
 
 // fabout DSD used to send ctrl wavelet to fabric along ctrl_color
 const out_dsd = @get_dsd(fabout_dsd, .{
@@ -46,9 +56,14 @@ fn main_fn() void {
   for (@range(u16, payload_size)) |i| { data[i] = @as(u32, y_coord + i); }
 
   @mov32(out_dsd, data_dsd, .{ .async = true, .activate = exit_task_id });
+
 }
 
 task exit_task() void {
+  @mov32(
+    tx_ctrl_dsd,
+    ctrl.encode_single_payload(ctrl.opcode.SWITCH_ADV, false, {}, 0)
+  );
   sys_mod.unblock_cmd_stream();
 }
 

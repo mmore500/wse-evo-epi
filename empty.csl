@@ -26,10 +26,14 @@ fn main_fn() void {
 
   const in_dsd = @get_dsd(fabin_dsd, .{
     .fabric_color = ctrl_color,
-    .extent = payload_size,
+    .extent = payload_size + 1,
     .input_queue = rx_iq
   });
-  @mov32(result_dsd, in_dsd, .{ .async = true, .activate = exit_task_id });
+  @mov32(result_dsd, in_dsd, .{
+    .async = true,
+    // .activate = exit_task_id,
+    .on_control = .{ .activate = exit_task_id },
+  });
 
 }
 
