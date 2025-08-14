@@ -52,25 +52,34 @@ fn main_fn() void {
 
 }
 
-var dummy = @zeros([2]u32);
+var dummy = @zeros([42]u32);
 const dummy_dsd = @get_dsd(
   mem1d_dsd,
-  .{ .tensor_access = |i|{2} -> dummy[i] }
+  .{ .tensor_access = |i|{42} -> dummy[i] }
 );
 
+const tile_config = @import_module("<tile_config>");
+const switch_config = tile_config.switch_config;
 
 task collect_task() void {
 
-  // @assert(false);
-  sys_mod.unblock_cmd_stream();
+  switch_config.set_pop_mode(
+    ctrl_color,
+    switch_config.pop_mode.POP_ON_ADVANCE
+  );
 
-  // const wait_dsd = @get_dsd(fabin_dsd, .{
-  //   .fabric_color = ctrl_color,
-  //   .extent = 2,
-  //   .input_queue = rx_iq
-  // });
+  const wait_dsd = @get_dsd(fabin_dsd, .{
+    .fabric_color = ctrl_color,
+    .extent = 1,
+    .input_queue = rx_iq,
+  });
 
-  // @mov32(dummy_dsd, wait_dsd);
+  @mov32(dummy_dsd, wait_dsd);  // TODO why an extra (control?) wavelet?
+  @mov32(dummy_dsd, wait_dsd, .{
+    .async = true,
+    .on_control = .{ .activate = exit_task_id },
+    // .activate = exit_task_id,
+  });
   // @assert(dummy[0] > 1000007); // TODO why is there an extra wavelet?
   // @assert(dummy[1] == 0);
 
@@ -91,6 +100,14 @@ task collect_task() void {
 }
 
 task exit_task() void {
+  @mov32(
+    tx_ctrl_dsd,
+    ctrl.encode_single_payload(ctrl.opcode.SWITCH_ADV, true, {}, 0)
+  );
+  @mov32(
+    tx_ctrl_dsd,
+    ctrl.encode_single_payload(ctrl.opcode.SWITCH_ADV, false, {}, 0)
+  );
   sys_mod.unblock_cmd_stream();
 }
 
